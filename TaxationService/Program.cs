@@ -1,4 +1,7 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using System.Configuration;
 using TaxationService.Domain.Configurations;
 using TaxationService.Domain.Exceptions;
 using TaxationService.Domain.Models.TaxServiceModel;
@@ -11,18 +14,14 @@ namespace MyApp
     {
         public static async Task Main(string[] args)
         {
-            //Dependency Injection for service builder.
-            var serviceProvider = new ServiceCollection()
-                                        .AddTransient<ITaxationProxyService, TaxationProxyService>()
-                                        .AddTransient<ITaxCalculator, TaxJarCalculator>()
-                                        .AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies())
-                                        .AddSingleton(new TaxJarConfiguration())
-                                        .AddTransient<ITaxJarClient, TaxJarClient>()
-                                        .AddHttpClient()
-                                        .BuildServiceProvider();
+            var host = new HostBuilder()
+                        .ConfigureServices(ConfigureServices).Build();
 
-            //standup the Tax proxy service. 
-            var taxationProxyService = serviceProvider.GetService<ITaxationProxyService>();
+            using var serviceScope = host.Services.CreateScope();
+
+            var services = serviceScope.ServiceProvider;
+
+            var taxationProxyService = services.GetRequiredService<ITaxationProxyService>();
 
             if (taxationProxyService != null)
             {
@@ -30,32 +29,54 @@ namespace MyApp
 
                 await RunRateForLocation(taxationProxyService);
             }
+
+            Console.WriteLine("Success");
+        }
+
+        private static void ConfigureServices(HostBuilderContext hostContext, IServiceCollection services)
+        {
+
+            var builder = new ConfigurationBuilder()
+                                .SetBasePath(Directory.GetCurrentDirectory())
+                                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+
+            IConfiguration configuration = builder.Build();
+            var taxJarAppSettings = configuration.GetSection("TaxJar").Get<TaxJarConfiguration>();
+
+            services.AddSingleton(configuration);
+            services.AddTransient<ITaxationProxyService, TaxationProxyService>();
+            services.AddTransient<ITaxCalculator, TaxJarCalculator>();
+            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+            services.AddSingleton(taxJarAppSettings);
+            services.AddHttpClient<ITaxJarClient, TaxJarClient>();
         }
 
         private static async Task RunTaxForOrder(ITaxationProxyService taxationProxyService)
         {
-            var request = new TaxForOrderRequest
+            try
             {
-                Amount = 10,
-                CalculatorType = Calculator.TaxJar,
-                Seller = new CalculateTaxRequestSeller
+                var request = new TaxForOrderRequest
                 {
-                    Street = "350 5th ave",
-                    City = "New York",
-                    State = "NY",
-                    Zip = "10118",
-                    Country = "US"
-                },
-                CustomerAddress = new CustomerAddress
-                {
-                    Street = "680 Route Six",
-                    City = "Mahopac",
-                    State = "NY",
-                    Zip = "10541",
-                    Country = "US"
-                },
-                Shipping = 10,
-                LineItems = new List<LineItemRequest>
+                    Amount = 10,
+                    CalculatorType = Calculator.TaxJar,
+                    Seller = new CalculateTaxRequestSeller
+                    {
+                        Street = "350 5th ave",
+                        City = "New York",
+                        State = "NY",
+                        Zip = "10118",
+                        Country = "US"
+                    },
+                    CustomerAddress = new CustomerAddress
+                    {
+                        Street = "680 Route Six",
+                        City = "Mahopac",
+                        State = "NY",
+                        Zip = "10541",
+                        Country = "US"
+                    },
+                    Shipping = 10,
+                    LineItems = new List<LineItemRequest>
                     {
                         new LineItemRequest
                         {
@@ -70,11 +91,16 @@ namespace MyApp
                             UnitPrice = 23.50m,
                         }
                     }
-            };
+                };
 
-            var calculatorOrderTax = await taxationProxyService.CalculateTaxAsync(request);
+                var calculatorOrderTax = await taxationProxyService.CalculateTaxAsync(request);
 
-            Console.WriteLine($"CalculateOrderTAx: {calculatorOrderTax.TotalTax}");
+                Console.WriteLine($"CalculateOrderTAx: {calculatorOrderTax.TotalTax}");
+            }
+            catch (CalculateTaxResponseException ex)
+            { 
+                Console.WriteLine(ex.Message);
+            }
         }
 
         private async static Task RunRateForLocation(ITaxationProxyService taxationProxyService)

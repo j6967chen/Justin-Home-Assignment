@@ -1,9 +1,4 @@
 ﻿using AutoMapper;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TaxationService.Domain.Models;
 using TaxationService.Domain.Models.TaxJarModel;
 using TaxationService.Domain.Models.TaxServiceModel;

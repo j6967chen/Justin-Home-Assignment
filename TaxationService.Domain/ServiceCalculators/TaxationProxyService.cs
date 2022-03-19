@@ -28,7 +28,7 @@ namespace TaxationService.Domain.ServiceCalculators
         {
             //Tax Service would need to decide which to use based on the Customer that is consuming the Tax Service.
             //We currently verify if the requested calculator type is TaxJar. 
-            var taxJarCalculator = this.taxCalculators.FirstOrDefault(c => c.SupportedCalculator.Contains(request.CalculatorType));
+            var taxJarCalculator = this.taxCalculators.FirstOrDefault(c => c.GetCalculatorType == request.CalculatorType);
 
             if (taxJarCalculator != null)
             {
@@ -66,7 +66,7 @@ namespace TaxationService.Domain.ServiceCalculators
 
             //Tax Service would need to decide which to use based on the Customer that is consuming the Tax Service.
             //We currently verify if the requested calculator type is TaxJar. 
-            var taxJarCalculator = this.taxCalculators.FirstOrDefault(c=> c.SupportedCalculator.Contains(request.CalculatorType));
+            var taxJarCalculator = this.taxCalculators.FirstOrDefault(c => c.GetCalculatorType == request.CalculatorType);
 
             if (taxJarCalculator != null)
             {

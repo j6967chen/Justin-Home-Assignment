@@ -21,6 +21,7 @@ namespace TaxationService.Domain.Exceptions
         }
     }
 
+
     [Serializable]
     public sealed class CalculateTaxResponseException : TaxException
     {
