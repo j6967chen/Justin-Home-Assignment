@@ -55,7 +55,7 @@ namespace TaxationService.Domain.ServiceCalculators
             }
             else
             {
-                throw new CalculateTaxRateResponseException("The custom calculator type is not found.");
+                throw new CalculateTaxRateResponseException($"The custom calculator type is not found. request type: {request.CalculatorType.ToString()}");
             }
 
             return await Task.FromResult(default(RateForLocation));
@@ -86,7 +86,7 @@ namespace TaxationService.Domain.ServiceCalculators
                 }
             }
 
-            return await Task.FromResult(default(TaxForOrderResponse));
+            throw new CalculateTaxResponseException($"The tax calculator type is not supported. request type: {request.CalculatorType.ToString()}");
         }
 
     }

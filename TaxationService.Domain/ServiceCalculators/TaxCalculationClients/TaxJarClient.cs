@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.RegularExpressions;
 using TaxationService.Domain.Configurations;
@@ -14,38 +15,24 @@ namespace TaxationService.Domain.ServiceCalculators.TaxCalculationClients
 
     public class TaxJarClient : ITaxJarClient
     {
-        private readonly TaxJarConfiguration configurationSettings;
-        private string usZipRegEx = @"^\d{5}(?:[-\s]\d{4})?$";
+        private const string usZipRegEx = @"^\d{5}(?:[-\s]\d{4})?$";
 
-        private readonly HttpClient httpClient;
+        private readonly IHttpClientFactory httpClientFactory;
+        private HttpClient httpClient => this.httpClientFactory.CreateClient("TaxJar");
 
-        public TaxJarClient(HttpClient httpClient, TaxJarConfiguration taxJarSettings)
+        public TaxJarClient(IHttpClientFactory httpClientFactory)
         {
-            this.httpClient = httpClient;
-            this.configurationSettings = taxJarSettings;
+            this.httpClientFactory = httpClientFactory;
         }
 
         public async Task<HttpResponseMessage> CalculateOrderTaxAsync(StringContent content, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(this.configurationSettings.ApiBaseUrl)
-                    ||
-                string.IsNullOrEmpty(this.configurationSettings.ApiVersion)
-                    ||
-                string.IsNullOrEmpty(this.configurationSettings.ApiKey))
-            {
-                throw new ArgumentException("One or more of configuration settings are not defined.");
-            }
-
             var request = new HttpRequestMessage
             {
-                RequestUri = new Uri(configurationSettings.ApiBaseUrl + "/v2/taxes"),
+                RequestUri = new Uri(this.httpClient.BaseAddress + "v2/taxes"),
                 Method = HttpMethod.Post,
                 Content = content
             };
-
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", this.configurationSettings.ApiKey);
-
-            request.Headers.Add("x-api-version", this.configurationSettings.ApiVersion);
 
             return await this.httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         }
@@ -54,17 +41,13 @@ namespace TaxationService.Domain.ServiceCalculators.TaxCalculationClients
         {
             this.ValidateSettingsAndParameters(rate);
 
-            var urlParameter = TaxJarClient.BuildUrlParameter(rate);
+            var urlParameters = TaxJarClient.BuildUrlParameter(rate);
 
             var request = new HttpRequestMessage
             {
-                RequestUri = new Uri($"{configurationSettings.ApiBaseUrl}/v2/rates/{urlParameter}"),
+                RequestUri = new Uri($"{this.httpClient.BaseAddress}v2/rates/{urlParameters}"),
                 Method = HttpMethod.Get,
             };
-
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", this.configurationSettings.ApiKey);
-
-            request.Headers.Add("x-api-version", this.configurationSettings.ApiVersion);
 
             return await this.httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         }
@@ -127,19 +110,10 @@ namespace TaxationService.Domain.ServiceCalculators.TaxCalculationClients
             return path;
         }
         
-        private bool IsUSZipCode(string zipCode) => !Regex.Match(zipCode, usZipRegEx).Success;
+        private static bool IsUSZipCode(string zipCode) => !Regex.Match(zipCode, usZipRegEx).Success;
 
         private void ValidateSettingsAndParameters(Rate rate)
         {
-            if (string.IsNullOrEmpty(this.configurationSettings.ApiBaseUrl)
-                        ||
-                    string.IsNullOrEmpty(this.configurationSettings.ApiVersion)
-                        ||
-                    string.IsNullOrEmpty(this.configurationSettings.ApiKey))
-            {
-                throw new ArgumentException("One or more of configuration settings are not defined.");
-            }
-
             if (string.IsNullOrEmpty(rate.Zip))
             {
                 throw new ArgumentException("Zip code can't be empty.");

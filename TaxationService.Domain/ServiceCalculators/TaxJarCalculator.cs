@@ -32,10 +32,10 @@ namespace TaxationService.Domain.ServiceCalculators
 
         public async Task<TaxRateResponse> GetRatesForLocationAsync(Rate request, CancellationToken cancellationToken = default)
         {
-            var response = await this.taxJarClient.GetRatesAsync(request, cancellationToken).ConfigureAwait(false);
-
             try
             {
+                var response = await this.taxJarClient.GetRatesAsync(request, cancellationToken).ConfigureAwait(false);
+
                 response.EnsureSuccessStatusCode();
 
                 var responseData = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -57,12 +57,12 @@ namespace TaxationService.Domain.ServiceCalculators
 
         public async Task<TaxResponse> CalculateTaxAsync(Tax request, CancellationToken cancellationToken)
         {
-            var stringContent = TaxJarCalculator.ConvertRequestToJsonHttpContent(request);
-
-            var response = await this.taxJarClient.CalculateOrderTaxAsync(stringContent, cancellationToken);
-
             try
             {
+                var stringContent = TaxJarCalculator.ConvertRequestToJsonHttpContent(request);
+
+                var response = await this.taxJarClient.CalculateOrderTaxAsync(stringContent, cancellationToken);
+
                 response.EnsureSuccessStatusCode();
 
                 var responseData = await response.Content.ReadAsStringAsync(cancellationToken);
