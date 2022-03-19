@@ -1,9 +1,5 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using TaxationService.Domain.Exceptions;
 using TaxationService.Domain.Models;
 using TaxationService.Domain.Models.TaxJarModel;
@@ -69,7 +65,7 @@ namespace TaxationService.Domain.ServiceCalculators
             {
                 var stringContent = TaxJarCalculator.ConvertRequestToJsonHttpContent(request);
 
-                var response = await this.taxJarClient.PostTaxAsync(stringContent, cancellationToken);
+                var response = await this.taxJarClient.CalculateOrderTaxAsync(stringContent, cancellationToken);
 
                 response.EnsureSuccessStatusCode();
 

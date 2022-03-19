@@ -34,6 +34,7 @@ namespace TaxationService.Domain.ServiceCalculators
             {
                 try
                 {
+                    //Map service request contract to TaxJar rate request.
                     var taxJarRateRequest = this.mapper.Map<Rate>(request);
 
                     var response = await taxJarCalculator.GetRatesForLocationAsync(taxJarRateRequest, cancellationToken).ConfigureAwait(false);
@@ -57,7 +58,7 @@ namespace TaxationService.Domain.ServiceCalculators
                 throw new CalculateTaxRateResponseException("The custom calculator type is not found.");
             }
 
-            return await Task.FromResult<RateForLocation>(null);
+            return await Task.FromResult(default(RateForLocation));
         }
 
         public async Task<TaxForOrderResponse> CalculateTaxAsync(TaxForOrderRequest request, CancellationToken cancellationToken)
@@ -65,30 +66,27 @@ namespace TaxationService.Domain.ServiceCalculators
 
             //Tax Service would need to decide which to use based on the Customer that is consuming the Tax Service.
             //We currently verify if the requested calculator type is TaxJar. 
-            if (request.CalculatorType == Calculator.TaxJar)
+            var taxJarCalculator = this.taxCalculators.FirstOrDefault(c=> c.SupportedCalculator.Contains(request.CalculatorType));
+
+            if (taxJarCalculator != null)
             {
-                var taxJarCalculator = this.taxCalculators.FirstOrDefault(c=> c.SupportedCalculator.Contains(request.CalculatorType));
+                //map client tax request to taxJar tax request.
+                var tax = this.mapper.Map<Tax>(request);
 
-                if (taxJarCalculator != null)
+                var response = await taxJarCalculator.CalculateTaxAsync(tax, cancellationToken).ConfigureAwait(false);
+
+                if (response != null)
                 {
-                    //map client tax request to taxJar tax request.
-                    var tax = this.mapper.Map<Tax>(request);
-
-                    var response = await taxJarCalculator.CalculateTaxAsync(tax, cancellationToken).ConfigureAwait(false);
-
-                    if (response != null)
+                    return new TaxForOrderResponse
                     {
-                        return new TaxForOrderResponse
-                        {
-                            TotalTax = response.Tax.AmountToCollect,
-                            OrderTotalAmount = response.Tax.TaxableAmount,
-                            TaxableShipping = response.Tax.Shipping
-                        };
-                    }
+                        TotalTax = response.Tax.AmountToCollect,
+                        OrderTotalAmount = response.Tax.TaxableAmount,
+                        TaxableShipping = response.Tax.Shipping
+                    };
                 }
             }
 
-            return await Task.FromResult<TaxForOrderResponse>(null);
+            return await Task.FromResult(default(TaxForOrderResponse));
         }
 
     }
