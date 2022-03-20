@@ -14,6 +14,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Taxation Service Tests", "Taxation Service Tests\Taxation Service Tests.csproj", "{C373AC71-DB35-41BE-8CCB-EE798CB55D1E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -28,9 +30,16 @@ Global
 		{34AA9573-347E-4641-8399-1D9A8F6C1916}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{34AA9573-347E-4641-8399-1D9A8F6C1916}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{34AA9573-347E-4641-8399-1D9A8F6C1916}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C373AC71-DB35-41BE-8CCB-EE798CB55D1E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C373AC71-DB35-41BE-8CCB-EE798CB55D1E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C373AC71-DB35-41BE-8CCB-EE798CB55D1E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C373AC71-DB35-41BE-8CCB-EE798CB55D1E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{C373AC71-DB35-41BE-8CCB-EE798CB55D1E} = {5BA20423-855D-437E-83C5-288D2137834F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8DC3997A-2A44-4BCB-8992-420C11D71359}

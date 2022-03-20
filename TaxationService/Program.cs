@@ -1,6 +1,7 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Net.Http.Headers;
 using TaxationService.Domain.Configurations;
 using TaxationService.Domain.Exceptions;
 using TaxationService.Domain.Models.TaxServiceModel;
@@ -11,26 +12,35 @@ namespace MyApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
-            var serviceProvider = new ServiceCollection()
-                                    .AddLogging()
-                                    .AddTransient<ITaxationProxyService, TaxationProxyService>()
-                                    .AddTransient<ITaxCalculator, TaxJarCalculator>()
-                                    .AddTransient<ITaxJarClient, TaxJarClient>()
-                                    .AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies())
-                                    .AddSingleton(new TaxJarConfiguration())
-                                    .AddHttpClient()
-                                    .BuildServiceProvider();
+            var host = new HostBuilder()
+                        .ConfigureServices(ConfigureServices).Build();
 
-            var taxationProxyService = serviceProvider.GetService<ITaxationProxyService>();
+            using var serviceScope = host.Services.CreateScope();
+
+            var services = serviceScope.ServiceProvider;
+
+            var taxationProxyService = services.GetRequiredService<ITaxProxyService>();
 
             if (taxationProxyService != null)
             {
+                await RunTaxForOrder(taxationProxyService);
+
+                await RunRateForLocation(taxationProxyService);
+            }
+
+            Console.WriteLine("Success");
+        }
+
+        private static async Task RunTaxForOrder(ITaxProxyService taxationProxyService)
+        {
+            try
+            {
                 var request = new TaxForOrderRequest
                 {
-                    Amount = 10,
                     CalculatorType = Calculator.TaxJar,
+
                     Seller = new CalculateTaxRequestSeller
                     {
                         Street = "350 5th ave",
@@ -47,6 +57,7 @@ namespace MyApp
                         Zip = "10541",
                         Country = "US"
                     },
+                    Amount = 10,
                     Shipping = 10,
                     LineItems = new List<LineItemRequest>
                     {
@@ -65,33 +76,67 @@ namespace MyApp
                     }
                 };
 
-                var calculatorOrderTax = taxationProxyService.CalculateTaxAsync(request).GetAwaiter().GetResult();
+                var calculatorOrderTax = await taxationProxyService.CalculateTaxAsync(request);
 
                 Console.WriteLine($"CalculateOrderTAx: {calculatorOrderTax.TotalTax}");
-
-                try
-                {
-                    var taxRateRequest = new TaxRateRequest
-                    {
-                        CalculatorType = Calculator.TaxJar,
-                        Country = "UssS",
-                        Zip = "11021",
-                        City = "great neck"
-                    };
-
-                    var rateForLocation = taxationProxyService.GetRatesForLocationAsync(taxRateRequest).GetAwaiter().GetResult();
-
-                    Console.WriteLine($"RateForLocation: {rateForLocation.CombindRate}");
-                }
-                catch (CalculateTaxRateResponseException ex)
-                { 
-                    Console.WriteLine(ex.Message);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                }
             }
+            catch (CalculateTaxResponseException ex)
+            { 
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        private async static Task RunRateForLocation(ITaxProxyService taxationProxyService)
+        {
+            try
+            {
+                var taxRateRequest = new TaxRateRequest
+                {
+                    CalculatorType = Calculator.TaxJar,
+                    Country = "US",
+                    Zip = "05495-9094",
+                    City = "great neck"
+                };
+
+                var rateForLocation = await taxationProxyService.GetRatesForLocationAsync(taxRateRequest);
+
+                Console.WriteLine($"RateForLocation: {rateForLocation.CombindedRate}, Country: {rateForLocation.Country}");
+            }
+            catch (CalculateTaxRateResponseException ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        private static void ConfigureServices(HostBuilderContext hostContext, IServiceCollection services)
+        {
+
+            var builder = new ConfigurationBuilder()
+                                .SetBasePath(Directory.GetCurrentDirectory())
+                                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+
+            IConfiguration configuration = builder.Build();
+
+            var taxJarAppSettings = configuration.GetSection("TaxJar").Get<TaxJarConfiguration>();
+
+            services.AddTransient<ITaxProxyService, TaxProxyService>();
+
+            services.AddTransient<ITaxCalculator, TaxJarCalculator>();
+
+            services.AddTransient<ITaxJarClient, TaxJarClient>();
+
+            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+            //set up httpClient with base url, api-version and auth api key.
+            services.AddHttpClient("TaxJar", client => {
+                client.BaseAddress = new Uri(taxJarAppSettings.ApiBaseUrl);
+                client.DefaultRequestHeaders.Add(HeaderNames.Authorization, $"Bearer {taxJarAppSettings.ApiKey}");
+                client.DefaultRequestHeaders.Add("x-api-version", taxJarAppSettings.ApiVersion);
+            });
         }
     }
 }

@@ -21,6 +21,19 @@ namespace TaxationService.Domain.Exceptions
         }
     }
 
+
+    [Serializable]
+    public sealed class CalculateTaxForOrderRequestException : TaxException
+    {
+        public CalculateTaxForOrderRequestException() : base($"TaxForOrderRequest is not well defined.")
+        {
+        }
+
+        private CalculateTaxForOrderRequestException(SerializationInfo info, StreamingContext context) : base(info, context)
+        {
+        }
+    }
+
     [Serializable]
     public sealed class CalculateTaxResponseException : TaxException
     {

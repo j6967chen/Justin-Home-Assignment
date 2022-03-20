@@ -9,26 +9,23 @@ namespace TaxationService.Domain.Configurations
     public sealed class TaxJarConfiguration
     {
         public string ApiBaseUrl 
-        { 
-            get
-            { 
-                return "https://api.taxjar.com"; 
-            }
+        {
+            get;
+            set;
         }
 
         public string ApiVersion
         {
-            get
-            {
-                return "2022-01-24";
-            }
+            get;
+            
+            set;
         }
         public string ApiKey 
         {
-            get
-            {
-                return "5da2f821eee4035db4771edab942a4cc";
-            }
+            get;
+
+            set;
+            
         }
     }
 }

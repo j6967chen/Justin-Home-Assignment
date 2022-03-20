@@ -1,9 +1,5 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using TaxationService.Domain.Exceptions;
 using TaxationService.Domain.Models;
 using TaxationService.Domain.Models.TaxJarModel;
@@ -14,7 +10,7 @@ namespace TaxationService.Domain.ServiceCalculators
 {
     public interface ITaxCalculator
     {
-        IReadOnlyList<Calculator> SupportedCalculator { get; }
+        Calculator GetCalculatorType { get; }
 
         Task<TaxResponse> CalculateTaxAsync(Tax request, CancellationToken cancellationToken = default);
 
@@ -25,14 +21,14 @@ namespace TaxationService.Domain.ServiceCalculators
     {
         private readonly ITaxJarClient taxJarClient;
 
-        public IReadOnlyList<Calculator> SupportedCalculator => new List<Calculator> { Calculator.TaxJar }.AsReadOnly();
+        private const Calculator calculatorType = Calculator.TaxJar;
 
         public TaxJarCalculator(ITaxJarClient taxJarClient)
         { 
             this.taxJarClient = taxJarClient;
         }
 
-        private static StringContent ConvertRequestToJsonHttpContent(object content) => new(JsonConvert.SerializeObject(content), Encoding.UTF8, "application/json");
+        public Calculator GetCalculatorType => calculatorType;
 
         public async Task<TaxRateResponse> GetRatesForLocationAsync(Rate request, CancellationToken cancellationToken = default)
         {
@@ -53,10 +49,6 @@ namespace TaxationService.Domain.ServiceCalculators
 
                 return await Task.FromResult(default(TaxRateResponse));
             }
-            catch (ArgumentException argumentException)
-            {
-                throw new CalculateTaxRateResponseException(argumentException.Message);
-            }
             catch (Exception exception)
             {
                 throw new CalculateTaxRateResponseException(exception.Message);
@@ -69,11 +61,11 @@ namespace TaxationService.Domain.ServiceCalculators
             {
                 var stringContent = TaxJarCalculator.ConvertRequestToJsonHttpContent(request);
 
-                var response = await this.taxJarClient.PostTaxAsync(stringContent, cancellationToken);
+                var response = await this.taxJarClient.CalculateOrderTaxAsync(stringContent, cancellationToken);
 
                 response.EnsureSuccessStatusCode();
 
-                var responseData = await response.Content.ReadAsStringAsync();
+                var responseData = await response.Content.ReadAsStringAsync(cancellationToken);
 
                 var calculateTaxResponse = JsonConvert.DeserializeObject<TaxResponse>(responseData);
 
@@ -84,14 +76,12 @@ namespace TaxationService.Domain.ServiceCalculators
 
                 return await Task.FromResult(default(TaxResponse));
             }
-            catch (ArgumentException argumentException)
-            {
-                throw new CalculateTaxResponseException(argumentException.Message);
-            }
             catch (Exception exception)
             {
                 throw new CalculateTaxResponseException(exception.Message);
             }
         }
+
+        private static StringContent ConvertRequestToJsonHttpContent(object content) => new(JsonConvert.SerializeObject(content), Encoding.UTF8, "application/json");
     }
 }
