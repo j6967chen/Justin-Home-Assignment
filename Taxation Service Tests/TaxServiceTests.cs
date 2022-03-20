@@ -104,7 +104,9 @@ namespace Taxation_Service_Tests
         [TestMethod]
         public async Task TaxProxyService_CalculateTaxForOrder_Good()
         {
-            TaxJarCalculator taxJarCalculator = BuildTaxJarCalculator();
+            var stringContent = new StringContent("{'tax':{'amount_to_collect':20.9,'breakdown':{'city_tax_collectable':0.0,'city_tax_rate':0.0,'city_taxable_amount':0.0,'combined_tax_rate':0.08375,'county_tax_collectable':10.92,'county_tax_rate':0.04375,'county_taxable_amount':249.5,'line_items':[{'city_amount':0.0,'city_tax_rate':0.0,'city_taxable_amount':0.0,'combined_tax_rate':0.08375,'county_amount':0.2,'county_tax_rate':0.04375,'county_taxable_amount':4.5,'id':'1','special_district_amount':0.0,'special_district_taxable_amount':0.0,'special_tax_rate':0.0,'state_amount':0.18,'state_sales_tax_rate':0.04,'state_taxable_amount':4.5,'tax_collectable':0.38,'taxable_amount':4.5},{'city_amount':0.0,'city_tax_rate':0.0,'city_taxable_amount':0.0,'combined_tax_rate':0.08375,'county_amount':10.28,'county_tax_rate':0.04375,'county_taxable_amount':235.0,'id':'2','special_district_amount':0.0,'special_district_taxable_amount':0.0,'special_tax_rate':0.0,'state_amount':9.4,'state_sales_tax_rate':0.04,'state_taxable_amount':235.0,'tax_collectable':19.68,'taxable_amount':235.0}],'shipping':{'city_amount':0.0,'city_tax_rate':0.0,'city_taxable_amount':0.0,'combined_tax_rate':0.08375,'county_amount':0.44,'county_tax_rate':0.04375,'county_taxable_amount':10.0,'special_district_amount':0.0,'special_tax_rate':0.0,'special_taxable_amount':0.0,'state_amount':0.4,'state_sales_tax_rate':0.04,'state_taxable_amount':10.0,'tax_collectable':0.84,'taxable_amount':10.0},'special_district_tax_collectable':0.0,'special_district_taxable_amount':0.0,'special_tax_rate':0.0,'state_tax_collectable':9.98,'state_tax_rate':0.04,'state_taxable_amount':249.5,'tax_collectable':20.9,'taxable_amount':249.5},'freight_taxable':true,'has_nexus':true,'jurisdictions':{'city':'MAHOPAC','country':'US','county':'PUTNAM','state':'NY'},'order_total_amount':249.5,'rate':0.08375,'shipping':10.0,'tax_source':'destination','taxable_amount':249.5}}");
+
+            TaxJarCalculator taxJarCalculator = BuildTaxJarCalculator(stringContent);
 
             var mappingConfig = new MapperConfiguration(mc =>
                                                 {
@@ -167,7 +169,9 @@ namespace Taxation_Service_Tests
         [TestMethod]
         public async Task Calculator_CalculateTaxForOrder_GoodTaxForOrder()
         {
-            TaxJarCalculator taxJarCalculator = BuildTaxJarCalculator();
+            var stringContent = new StringContent("{'tax':{'amount_to_collect':20.9,'breakdown':{'city_tax_collectable':0.0,'city_tax_rate':0.0,'city_taxable_amount':0.0,'combined_tax_rate':0.08375,'county_tax_collectable':10.92,'county_tax_rate':0.04375,'county_taxable_amount':249.5,'line_items':[{'city_amount':0.0,'city_tax_rate':0.0,'city_taxable_amount':0.0,'combined_tax_rate':0.08375,'county_amount':0.2,'county_tax_rate':0.04375,'county_taxable_amount':4.5,'id':'1','special_district_amount':0.0,'special_district_taxable_amount':0.0,'special_tax_rate':0.0,'state_amount':0.18,'state_sales_tax_rate':0.04,'state_taxable_amount':4.5,'tax_collectable':0.38,'taxable_amount':4.5},{'city_amount':0.0,'city_tax_rate':0.0,'city_taxable_amount':0.0,'combined_tax_rate':0.08375,'county_amount':10.28,'county_tax_rate':0.04375,'county_taxable_amount':235.0,'id':'2','special_district_amount':0.0,'special_district_taxable_amount':0.0,'special_tax_rate':0.0,'state_amount':9.4,'state_sales_tax_rate':0.04,'state_taxable_amount':235.0,'tax_collectable':19.68,'taxable_amount':235.0}],'shipping':{'city_amount':0.0,'city_tax_rate':0.0,'city_taxable_amount':0.0,'combined_tax_rate':0.08375,'county_amount':0.44,'county_tax_rate':0.04375,'county_taxable_amount':10.0,'special_district_amount':0.0,'special_tax_rate':0.0,'special_taxable_amount':0.0,'state_amount':0.4,'state_sales_tax_rate':0.04,'state_taxable_amount':10.0,'tax_collectable':0.84,'taxable_amount':10.0},'special_district_tax_collectable':0.0,'special_district_taxable_amount':0.0,'special_tax_rate':0.0,'state_tax_collectable':9.98,'state_tax_rate':0.04,'state_taxable_amount':249.5,'tax_collectable':20.9,'taxable_amount':249.5},'freight_taxable':true,'has_nexus':true,'jurisdictions':{'city':'MAHOPAC','country':'US','county':'PUTNAM','state':'NY'},'order_total_amount':249.5,'rate':0.08375,'shipping':10.0,'tax_source':'destination','taxable_amount':249.5}}");
+
+            TaxJarCalculator taxJarCalculator = BuildTaxJarCalculator(stringContent);
 
             var request = new Tax
             {
@@ -181,7 +185,7 @@ namespace Taxation_Service_Tests
             Assert.AreEqual(result.Tax.Breakdown.StateTaxRate, 0.04m);
         }
 
-        private TaxJarCalculator BuildTaxJarCalculator()
+        private TaxJarCalculator BuildTaxJarCalculator(StringContent stringContent)
         {
             //Arrange - configure the mock
             var mockHttpMessageHandler = new Mock<HttpMessageHandler>();
@@ -191,7 +195,7 @@ namespace Taxation_Service_Tests
                 .ReturnsAsync(new HttpResponseMessage
                 {
                     StatusCode = HttpStatusCode.OK,
-                    Content = new StringContent("{'tax':{'amount_to_collect':20.9,'breakdown':{'city_tax_collectable':0.0,'city_tax_rate':0.0,'city_taxable_amount':0.0,'combined_tax_rate':0.08375,'county_tax_collectable':10.92,'county_tax_rate':0.04375,'county_taxable_amount':249.5,'line_items':[{'city_amount':0.0,'city_tax_rate':0.0,'city_taxable_amount':0.0,'combined_tax_rate':0.08375,'county_amount':0.2,'county_tax_rate':0.04375,'county_taxable_amount':4.5,'id':'1','special_district_amount':0.0,'special_district_taxable_amount':0.0,'special_tax_rate':0.0,'state_amount':0.18,'state_sales_tax_rate':0.04,'state_taxable_amount':4.5,'tax_collectable':0.38,'taxable_amount':4.5},{'city_amount':0.0,'city_tax_rate':0.0,'city_taxable_amount':0.0,'combined_tax_rate':0.08375,'county_amount':10.28,'county_tax_rate':0.04375,'county_taxable_amount':235.0,'id':'2','special_district_amount':0.0,'special_district_taxable_amount':0.0,'special_tax_rate':0.0,'state_amount':9.4,'state_sales_tax_rate':0.04,'state_taxable_amount':235.0,'tax_collectable':19.68,'taxable_amount':235.0}],'shipping':{'city_amount':0.0,'city_tax_rate':0.0,'city_taxable_amount':0.0,'combined_tax_rate':0.08375,'county_amount':0.44,'county_tax_rate':0.04375,'county_taxable_amount':10.0,'special_district_amount':0.0,'special_tax_rate':0.0,'special_taxable_amount':0.0,'state_amount':0.4,'state_sales_tax_rate':0.04,'state_taxable_amount':10.0,'tax_collectable':0.84,'taxable_amount':10.0},'special_district_tax_collectable':0.0,'special_district_taxable_amount':0.0,'special_tax_rate':0.0,'state_tax_collectable':9.98,'state_tax_rate':0.04,'state_taxable_amount':249.5,'tax_collectable':20.9,'taxable_amount':249.5},'freight_taxable':true,'has_nexus':true,'jurisdictions':{'city':'MAHOPAC','country':'US','county':'PUTNAM','state':'NY'},'order_total_amount':249.5,'rate':0.08375,'shipping':10.0,'tax_source':'destination','taxable_amount':249.5}}"),
+                    Content = stringContent,
                 });
 
             var mockFactory = new Mock<IHttpClientFactory>();
@@ -216,7 +220,9 @@ namespace Taxation_Service_Tests
         [TestMethod]
         public async Task Calculator_GetRateForLocation_GoodRate()
         {
-            TaxJarCalculator taxJarCalculator = BuildTaxJarCalculator();
+            var stringContent = new StringContent("{'rate':{'city':null,'city_rate':'0.01','combined_district_rate':'0.0','combined_rate':'0.07','country':'US','country_rate':'0.0','county':'CHITTENDEN','county_rate':'0.0','freight_taxable':true,'state':'VT','state_rate':'0.06','zip':'05495-9094'}}");
+
+            TaxJarCalculator taxJarCalculator = BuildTaxJarCalculator(stringContent);
 
             var rate = new Rate {
                 Country = "US",
