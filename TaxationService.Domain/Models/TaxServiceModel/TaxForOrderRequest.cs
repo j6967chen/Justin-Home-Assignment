@@ -2,6 +2,7 @@
 {
     public enum Calculator
     { 
+        None,
         TaxJar,
         Vertex
     }

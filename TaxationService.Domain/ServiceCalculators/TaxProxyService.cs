@@ -6,19 +6,19 @@ using TaxationService.Domain.Models.TaxServiceModel;
 
 namespace TaxationService.Domain.ServiceCalculators
 {
-    public interface ITaxationProxyService
+    public interface ITaxProxyService
     {
         Task<TaxForOrderResponse> CalculateTaxAsync(TaxForOrderRequest request, CancellationToken cancellationToken = default);
 
         Task<RateForLocation> GetRatesForLocationAsync(TaxRateRequest request, CancellationToken cancellationToken = default);
     }
 
-    public class TaxationProxyService : ITaxationProxyService
+    public class TaxProxyService : ITaxProxyService
     {
         private readonly IEnumerable<ITaxCalculator> taxCalculators;
         private readonly IMapper mapper;
 
-        public TaxationProxyService(IEnumerable<ITaxCalculator> taxCalculators, IMapper mapper )
+        public TaxProxyService(IEnumerable<ITaxCalculator> taxCalculators, IMapper mapper)
         { 
             this.taxCalculators = taxCalculators;
             this.mapper = mapper;
@@ -44,7 +44,7 @@ namespace TaxationService.Domain.ServiceCalculators
                         return new RateForLocation
                         {
                             Country = response.Rate.Country,
-                            CombindRate = response.Rate.CombinedRate
+                            CombindedRate = response.Rate.CombinedRate
                         };
                     }
                 }
@@ -73,6 +73,11 @@ namespace TaxationService.Domain.ServiceCalculators
                 //map client tax request to taxJar tax request.
                 var tax = this.mapper.Map<Tax>(request);
 
+                if (tax == null)
+                {
+                    throw new CalculateTaxForOrderRequestException();
+                }
+
                 var response = await taxJarCalculator.CalculateTaxAsync(tax, cancellationToken).ConfigureAwait(false);
 
                 if (response != null)
@@ -84,6 +89,8 @@ namespace TaxationService.Domain.ServiceCalculators
                         TaxableShipping = response.Tax.Shipping
                     };
                 }
+
+                return await Task.FromResult<TaxForOrderResponse>(default); 
             }
 
             throw new CalculateTaxResponseException($"The tax calculator type is not supported. request type: {request.CalculatorType.ToString()}");

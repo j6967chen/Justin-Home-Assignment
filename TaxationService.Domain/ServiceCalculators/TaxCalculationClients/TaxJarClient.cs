@@ -1,8 +1,5 @@
-﻿using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
+﻿using System.Text;
 using System.Text.RegularExpressions;
-using TaxationService.Domain.Configurations;
 using TaxationService.Domain.Models.TaxJarModel;
 
 namespace TaxationService.Domain.ServiceCalculators.TaxCalculationClients

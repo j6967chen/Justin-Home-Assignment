@@ -21,7 +21,7 @@ namespace MyApp
 
             var services = serviceScope.ServiceProvider;
 
-            var taxationProxyService = services.GetRequiredService<ITaxationProxyService>();
+            var taxationProxyService = services.GetRequiredService<ITaxProxyService>();
 
             if (taxationProxyService != null)
             {
@@ -33,7 +33,7 @@ namespace MyApp
             Console.WriteLine("Success");
         }
 
-        private static async Task RunTaxForOrder(ITaxationProxyService taxationProxyService)
+        private static async Task RunTaxForOrder(ITaxProxyService taxationProxyService)
         {
             try
             {
@@ -86,7 +86,7 @@ namespace MyApp
             }
         }
 
-        private async static Task RunRateForLocation(ITaxationProxyService taxationProxyService)
+        private async static Task RunRateForLocation(ITaxProxyService taxationProxyService)
         {
             try
             {
@@ -100,7 +100,7 @@ namespace MyApp
 
                 var rateForLocation = await taxationProxyService.GetRatesForLocationAsync(taxRateRequest);
 
-                Console.WriteLine($"RateForLocation: {rateForLocation.CombindRate}, Country: {rateForLocation.Country}");
+                Console.WriteLine($"RateForLocation: {rateForLocation.CombindedRate}, Country: {rateForLocation.Country}");
             }
             catch (CalculateTaxRateResponseException ex)
             {
@@ -123,7 +123,7 @@ namespace MyApp
 
             var taxJarAppSettings = configuration.GetSection("TaxJar").Get<TaxJarConfiguration>();
 
-            services.AddTransient<ITaxationProxyService, TaxationProxyService>();
+            services.AddTransient<ITaxProxyService, TaxProxyService>();
 
             services.AddTransient<ITaxCalculator, TaxJarCalculator>();
 
