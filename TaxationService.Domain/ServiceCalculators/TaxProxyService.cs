@@ -10,7 +10,7 @@ namespace TaxationService.Domain.ServiceCalculators
     {
         Task<TaxForOrderResponse> CalculateTaxAsync(TaxForOrderRequest request, CancellationToken cancellationToken = default);
 
-        Task<RateForLocation> GetRatesForLocationAsync(TaxRateRequest request, CancellationToken cancellationToken = default);
+        Task<RateForLocationResponse> GetRatesForLocationAsync(TaxRateRequest request, CancellationToken cancellationToken = default);
     }
 
     public class TaxProxyService : ITaxProxyService
@@ -24,7 +24,7 @@ namespace TaxationService.Domain.ServiceCalculators
             this.mapper = mapper;
         }
 
-        public async Task<RateForLocation> GetRatesForLocationAsync(TaxRateRequest request, CancellationToken cancellationToken = default)
+        public async Task<RateForLocationResponse> GetRatesForLocationAsync(TaxRateRequest request, CancellationToken cancellationToken = default)
         {
             //Tax Service would need to decide which to use based on the Customer that is consuming the Tax Service.
             //We currently verify if the requested calculator type is TaxJar. 
@@ -34,14 +34,15 @@ namespace TaxationService.Domain.ServiceCalculators
             {
                 try
                 {
-                    //Map service request contract to TaxJar rate request.
+                    //Map proxy service request contract to TaxJar rate request contract.
                     var taxJarRateRequest = this.mapper.Map<Rate>(request);
 
                     var response = await taxJarCalculator.GetRatesForLocationAsync(taxJarRateRequest, cancellationToken).ConfigureAwait(false);
 
                     if (response != null)
                     {
-                        return new RateForLocation
+                        //TODO: will add more attributes if needed. This is for demo purpose.
+                        return new RateForLocationResponse
                         {
                             Country = response.Rate.Country,
                             CombindedRate = response.Rate.CombinedRate
@@ -58,7 +59,7 @@ namespace TaxationService.Domain.ServiceCalculators
                 throw new CalculateTaxRateResponseException($"The custom calculator type is not found. request type: {request.CalculatorType.ToString()}");
             }
 
-            return await Task.FromResult(default(RateForLocation));
+            return await Task.FromResult(default(RateForLocationResponse));
         }
 
         public async Task<TaxForOrderResponse> CalculateTaxAsync(TaxForOrderRequest request, CancellationToken cancellationToken)
@@ -82,6 +83,7 @@ namespace TaxationService.Domain.ServiceCalculators
 
                 if (response != null)
                 {
+                    //TODO: will add more attributes if needed.
                     return new TaxForOrderResponse
                     {
                         TotalTax = response.Tax.AmountToCollect,
