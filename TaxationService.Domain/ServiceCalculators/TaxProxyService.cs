@@ -45,7 +45,7 @@ namespace TaxationService.Domain.ServiceCalculators
                         return new RateForLocationResponse
                         {
                             Country = response.Rate.Country,
-                            CombindedRate = response.Rate.CombinedRate
+                            CombinedRate = response.Rate.CombinedRate
                         };
                     }
                 }

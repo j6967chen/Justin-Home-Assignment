@@ -3,6 +3,6 @@
     public class RateForLocationResponse
     {
         public string Country { get; set; }
-        public decimal CombindedRate { get; set; }            
+        public decimal CombinedRate { get; set; }            
     }
 }

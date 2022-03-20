@@ -100,7 +100,7 @@ namespace MyApp
 
                 var rateForLocation = await taxationProxyService.GetRatesForLocationAsync(taxRateRequest);
 
-                Console.WriteLine($"RateForLocation: {rateForLocation.CombindedRate}, Country: {rateForLocation.Country}");
+                Console.WriteLine($"RateForLocation: {rateForLocation.CombinedRate}, Country: {rateForLocation.Country}");
             }
             catch (CalculateTaxRateResponseException ex)
             {

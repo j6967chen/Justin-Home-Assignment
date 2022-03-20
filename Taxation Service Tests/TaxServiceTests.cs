@@ -99,6 +99,8 @@ namespace Taxation_Service_Tests
             };
 
              _ = await this.taxProxyService.CalculateTaxAsync(request);
+
+            Assert.Fail("Should have thrown CalculateTaxForOrderRequestException");
         }
 
         [TestMethod]
