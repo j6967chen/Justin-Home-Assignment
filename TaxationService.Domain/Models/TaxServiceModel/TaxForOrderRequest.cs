@@ -1,10 +1,9 @@
 ﻿namespace TaxationService.Domain.Models.TaxServiceModel
 {
     public enum Calculator
-    { 
-        None,
-        TaxJar,
-        Vertex
+    {
+        Vertex,
+        TaxJar
     }
 
     public class TaxForOrderRequest

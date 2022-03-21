@@ -106,6 +106,7 @@ namespace Taxation_Service_Tests
         [TestMethod]
         public async Task TaxProxyService_CalculateTaxForOrder_Good()
         {
+            //Arrange 
             var stringContent = new StringContent("{'tax':{'amount_to_collect':20.9,'breakdown':{'city_tax_collectable':0.0,'city_tax_rate':0.0,'city_taxable_amount':0.0,'combined_tax_rate':0.08375,'county_tax_collectable':10.92,'county_tax_rate':0.04375,'county_taxable_amount':249.5,'line_items':[{'city_amount':0.0,'city_tax_rate':0.0,'city_taxable_amount':0.0,'combined_tax_rate':0.08375,'county_amount':0.2,'county_tax_rate':0.04375,'county_taxable_amount':4.5,'id':'1','special_district_amount':0.0,'special_district_taxable_amount':0.0,'special_tax_rate':0.0,'state_amount':0.18,'state_sales_tax_rate':0.04,'state_taxable_amount':4.5,'tax_collectable':0.38,'taxable_amount':4.5},{'city_amount':0.0,'city_tax_rate':0.0,'city_taxable_amount':0.0,'combined_tax_rate':0.08375,'county_amount':10.28,'county_tax_rate':0.04375,'county_taxable_amount':235.0,'id':'2','special_district_amount':0.0,'special_district_taxable_amount':0.0,'special_tax_rate':0.0,'state_amount':9.4,'state_sales_tax_rate':0.04,'state_taxable_amount':235.0,'tax_collectable':19.68,'taxable_amount':235.0}],'shipping':{'city_amount':0.0,'city_tax_rate':0.0,'city_taxable_amount':0.0,'combined_tax_rate':0.08375,'county_amount':0.44,'county_tax_rate':0.04375,'county_taxable_amount':10.0,'special_district_amount':0.0,'special_tax_rate':0.0,'special_taxable_amount':0.0,'state_amount':0.4,'state_sales_tax_rate':0.04,'state_taxable_amount':10.0,'tax_collectable':0.84,'taxable_amount':10.0},'special_district_tax_collectable':0.0,'special_district_taxable_amount':0.0,'special_tax_rate':0.0,'state_tax_collectable':9.98,'state_tax_rate':0.04,'state_taxable_amount':249.5,'tax_collectable':20.9,'taxable_amount':249.5},'freight_taxable':true,'has_nexus':true,'jurisdictions':{'city':'MAHOPAC','country':'US','county':'PUTNAM','state':'NY'},'order_total_amount':249.5,'rate':0.08375,'shipping':10.0,'tax_source':'destination','taxable_amount':249.5}}");
 
             TaxJarCalculator taxJarCalculator = BuildTaxJarCalculator(stringContent);
@@ -119,6 +120,7 @@ namespace Taxation_Service_Tests
 
             var taxProxyService = new TaxProxyService(new List<ITaxCalculator> { taxJarCalculator }, mapper);
 
+            //Act 
             var result = await taxProxyService.CalculateTaxAsync(this.taxForOrderRequest, new CancellationToken());
 
             //Assert - assert on the mock
@@ -132,7 +134,7 @@ namespace Taxation_Service_Tests
         {
             var request = new TaxForOrderRequest
             {
-                CalculatorType = Calculator.None
+                CalculatorType = Calculator.Vertex
             };
 
             _ = await this.taxProxyService.CalculateTaxAsync(request);
@@ -237,6 +239,111 @@ namespace Taxation_Service_Tests
             //Assert - assert on the mock
             Assert.AreEqual(result.Rate.CityRate, 0.01m);
             Assert.AreEqual(result.Rate.CombinedRate, 0.07m);
+        }
+
+        [TestMethod]
+        public async Task TaxProxyService_GetRateForLocation_GoodRate()
+        {
+            var stringContent = new StringContent("{'rate':{'city':null,'city_rate':'0.01','combined_district_rate':'0.0','combined_rate':'0.07','country':'US','country_rate':'0.0','county':'CHITTENDEN','county_rate':'0.0','freight_taxable':true,'state':'VT','state_rate':'0.06','zip':'05495-9094'}}");
+
+            TaxJarCalculator taxJarCalculator = BuildTaxJarCalculator(stringContent);
+
+            var rate = new Rate
+            {
+                Country = "US",
+                Zip = "10016"
+            };
+
+            var mappingConfig = new MapperConfiguration(mc =>
+            {
+                mc.AddProfile(new TaxJarProfile());
+            });
+
+            IMapper mapper = mappingConfig.CreateMapper();
+
+            var taxProxyService = new TaxProxyService(new List<ITaxCalculator> { taxJarCalculator }, mapper);
+
+
+            //Act 
+            var result = await taxJarCalculator.GetRatesForLocationAsync(rate, new CancellationToken());
+
+            //Assert - assert on the mock
+            Assert.AreEqual(result.Rate.CityRate, 0.01m);
+            Assert.AreEqual(result.Rate.CombinedRate, 0.07m);
+        }
+
+        [TestMethod]
+        public async Task TaxProxyService_GetRateForLocation_InvalidCountryCode()
+        {
+            var stringContent = new StringContent("{'rate':{'city':null,'city_rate':'0.01','combined_district_rate':'0.0','combined_rate':'0.07','country':'US','country_rate':'0.0','county':'CHITTENDEN','county_rate':'0.0','freight_taxable':true,'state':'VT','state_rate':'0.06','zip':'05495-9094'}}");
+
+            TaxJarCalculator taxJarCalculator = BuildTaxJarCalculator(stringContent);
+
+            var rate = new Rate
+            {
+                Country = "sUS",
+                Zip = "10016"
+            };
+
+            var mappingConfig = new MapperConfiguration(mc =>
+            {
+                mc.AddProfile(new TaxJarProfile());
+            });
+
+            IMapper mapper = mappingConfig.CreateMapper();
+
+            var taxProxyService = new TaxProxyService(new List<ITaxCalculator> { taxJarCalculator }, mapper);
+
+            try
+            {
+                //Act 
+                var result = await taxJarCalculator.GetRatesForLocationAsync(rate, new CancellationToken());
+
+                Assert.Fail("Should have thrown CalculateTaxRateResponseException");
+            }
+            catch (CalculateTaxRateResponseException ex)
+            {
+                //Assert - assert on the mock
+                Assert.IsNotNull(ex);
+                Assert.IsTrue(ex.Message.Contains("Country Code lenght must be equal 2"));
+            }
+        }
+
+        [TestMethod]
+        public async Task TaxProxyService_GetRateForLocation_InvalidZipCode()
+        {
+            var stringContent = new StringContent("{'rate':{'city':null,'city_rate':'0.01','combined_district_rate':'0.0','combined_rate':'0.07','country':'US','country_rate':'0.0','county':'CHITTENDEN','county_rate':'0.0','freight_taxable':true,'state':'VT','state_rate':'0.06','zip':'05495-9094'}}");
+
+            TaxJarCalculator taxJarCalculator = BuildTaxJarCalculator(stringContent);
+
+            var rate = new Rate
+            {
+                Country = "US",
+                Zip = "10016-09"
+            };
+
+            var mappingConfig = new MapperConfiguration(mc =>
+            {
+                mc.AddProfile(new TaxJarProfile());
+            });
+
+            IMapper mapper = mappingConfig.CreateMapper();
+
+            var taxProxyService = new TaxProxyService(new List<ITaxCalculator> { taxJarCalculator }, mapper);
+
+            try
+            {
+                //Act 
+                var result = await taxJarCalculator.GetRatesForLocationAsync(rate, new CancellationToken());
+
+                Assert.Fail("Should have thrown CalculateTaxRateResponseException");
+            }
+            catch (CalculateTaxRateResponseException ex)
+            {
+                //Assert - assert on the mock
+                Assert.IsNotNull(ex);
+                Assert.IsTrue(ex.Message.Contains("Zip code format is incorrect."));
+            }
         }
     }
 }
