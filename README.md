@@ -21,4 +21,4 @@ The taxation service library has some key implemenation details
   - Using IHttpClientFactory manages the pooling and lifetime of underlying HttpClientMessageHandler instances to avoids common DSN problems that occur when manually manging HttpClient lifetime.
 
 The MSUnit Test
-  - Using Mog library to mock class instance. Test various cases on both TaxProxyService and TaxJarCalculator instance.
+  - Using Mog object framework to mock objects. Test various cases on both TaxProxyService and TaxJarCalculator instance.
