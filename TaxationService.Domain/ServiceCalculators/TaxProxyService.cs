@@ -28,16 +28,18 @@ namespace TaxationService.Domain.ServiceCalculators
         {
             //Tax Service would need to decide which to use based on the Customer that is consuming the Tax Service.
             //We currently verify if the requested calculator type is TaxJar. 
-            var taxJarCalculator = this.taxCalculators.FirstOrDefault(c => c.GetCalculatorType == request.CalculatorType);
+            var taxCalculator = this.taxCalculators.FirstOrDefault(c => c.GetCalculatorType == request.CalculatorType);
 
-            if (taxJarCalculator != null)
+            if (taxCalculator != null 
+                    && 
+                 taxCalculator.GetType() == typeof(TaxJarCalculator))
             {
                 try
                 {
                     //Map proxy service request contract to TaxJar rate request contract.
                     var taxJarRateRequest = this.mapper.Map<Rate>(request);
 
-                    var response = await taxJarCalculator.GetRatesForLocationAsync(taxJarRateRequest, cancellationToken).ConfigureAwait(false);
+                    var response = await taxCalculator.GetRatesForLocationAsync(taxJarRateRequest, cancellationToken).ConfigureAwait(false);
 
                     if (response != null)
                     {
