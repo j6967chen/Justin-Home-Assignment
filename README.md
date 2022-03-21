@@ -1,8 +1,8 @@
-# IMCTaxationService
+# Assignment
 
-## IMC Assignment
+## Justin's Assignment
 
-The projecte consists of three apps where are implemented with .Net Core 6.0 
+The project consists of three apps where are implemented with .Net Core 6.0 
 -  Console app
 -  Taxation Service Library
 -  Unit Test 
