@@ -282,7 +282,7 @@ namespace Taxation_Service_Tests
 
             var rate = new Rate
             {
-                Country = "sUS",
+                Country = "sUS", //incorrect length
                 Zip = "10016"
             };
 
@@ -320,7 +320,7 @@ namespace Taxation_Service_Tests
             var rate = new Rate
             {
                 Country = "US",
-                Zip = "10016-09"
+                Zip = "10016-09" //incorrect zip format zipCode + 4
             };
 
             var mappingConfig = new MapperConfiguration(mc =>
