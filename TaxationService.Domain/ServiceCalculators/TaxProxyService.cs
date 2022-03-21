@@ -92,7 +92,7 @@ namespace TaxationService.Domain.ServiceCalculators
                     };
                 }
 
-                return await Task.FromResult<TaxForOrderResponse>(default); 
+                return await Task.FromResult(default(TaxForOrderResponse)); 
             }
 
             throw new CalculateTaxResponseException($"The tax calculator type is not supported. request type: {request.CalculatorType.ToString()}");

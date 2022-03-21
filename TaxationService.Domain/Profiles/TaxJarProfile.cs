@@ -9,11 +9,12 @@ namespace TaxationService.Domain.Mappers
     {
         public TaxJarProfile()
         {
-
+            //map tax rate for location request to taxJar rate request 
             CreateMap<TaxRateRequest, Rate>();
 
             CreateMap<LineItemRequest, TaxLineItem>();
 
+            //map application service layer tax for order request to taxJar calculator layer request
             CreateMap<TaxForOrderRequest, Tax>()
                 .ForMember(dest => dest.FromCity, act => act.MapFrom(src => src.Seller.City))
                 .ForMember(dest => dest.FromState, act => act.MapFrom(src => src.Seller.State))
