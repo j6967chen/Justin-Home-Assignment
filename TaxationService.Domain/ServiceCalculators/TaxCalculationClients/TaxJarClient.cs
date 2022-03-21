@@ -36,7 +36,7 @@ namespace TaxationService.Domain.ServiceCalculators.TaxCalculationClients
 
         public async Task<HttpResponseMessage> GetRatesAsync(Rate rate, CancellationToken cancellationToken)
         {
-            this.ValidateSettingsAndParameters(rate);
+            this.ValidateZipCode(rate);
 
             var urlParameters = TaxJarClient.BuildUrlParameter(rate);
 
@@ -109,7 +109,7 @@ namespace TaxationService.Domain.ServiceCalculators.TaxCalculationClients
         
         private static bool IsUSZipCode(string zipCode) => !Regex.Match(zipCode, usZipRegEx).Success;
 
-        private void ValidateSettingsAndParameters(Rate rate)
+        private void ValidateZipCode(Rate rate)
         {
             if (string.IsNullOrEmpty(rate.Zip))
             {
