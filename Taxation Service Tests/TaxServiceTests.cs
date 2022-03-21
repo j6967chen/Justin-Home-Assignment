@@ -98,7 +98,8 @@ namespace Taxation_Service_Tests
                 CalculatorType = Calculator.TaxJar
             };
 
-             _ = await this.taxProxyService.CalculateTaxAsync(request);
+            //TaxForOrderRequest is not well defined.
+            _ = await this.taxProxyService.CalculateTaxAsync(request);
 
             Assert.Fail("Should have thrown CalculateTaxForOrderRequestException");
         }
